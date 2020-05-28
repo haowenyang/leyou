@@ -19,7 +19,7 @@ public class UploadController {
 
     @PostMapping("/image")
     public ResponseEntity<String> uploadImage(@RequestParam("file")MultipartFile file){
-        String saveUrl = uploadService.uploadImage(file);
+        String saveUrl = uploadService.upload(file);
         if (saveUrl==null){
             return ResponseEntity.badRequest().build();
         }

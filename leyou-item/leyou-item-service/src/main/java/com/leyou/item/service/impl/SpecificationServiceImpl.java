@@ -34,4 +34,18 @@ public class SpecificationServiceImpl implements SpecificationService {
         return specParamMapper.select(specParam);
     }
 
+    @Override
+    public List<SpecGroup> querySpecsByCid(Long cid) {
+        //查询所有的规格参数组
+        List<SpecGroup> specGroups = this.querySpecGroupsByCid(cid);
+        specGroups.forEach(specGroup -> {
+            //查询该规格参组下的所有规格参数
+            List<SpecParam> specParams = this.querySpecParamsByGid(specGroup.getId(), null, null, null);
+            //封装到规格参数组中
+            specGroup.setParams(specParams);
+        });
+
+        return specGroups;
+    }
+
 }

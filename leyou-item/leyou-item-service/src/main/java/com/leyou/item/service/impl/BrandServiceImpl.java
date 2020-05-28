@@ -58,4 +58,9 @@ public class BrandServiceImpl implements BrandService {
     public List<Brand> queryBrandsByCid(Long cid) {
         return brandMapper.selectBrandByCid(cid);
     }
+
+    @Override
+    public Brand queryBrandById(Long id) {
+        return brandMapper.selectByPrimaryKey(id);
+    }
 }

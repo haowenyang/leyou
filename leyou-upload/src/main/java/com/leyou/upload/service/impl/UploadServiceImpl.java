@@ -1,8 +1,12 @@
 package com.leyou.upload.service.impl;
 
+import com.github.tobato.fastdfs.domain.StorePath;
+import com.github.tobato.fastdfs.service.FastFileStorageClient;
 import com.leyou.upload.service.UploadService;
+import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.util.MimeTypeUtils;
@@ -18,33 +22,41 @@ import java.util.List;
 
 @Service
 public class UploadServiceImpl implements UploadService {
+    @Autowired
+    private FastFileStorageClient storageClient;
 
+    private static final List<String> CONTENT_TYPES = Arrays.asList("image/jpeg", "image/gif");
 
-    private final Logger LOGGER = LoggerFactory.getLogger(getClass());
+    private static final Logger LOGGER = LoggerFactory.getLogger(UploadService.class);
 
-    private static final List<String> CONTENT_TYPES = Arrays.asList("image/gif","image/jpeg");
+    public String upload(MultipartFile file) {
 
-    @Override
-    public String uploadImage(MultipartFile file) {
-        //1. 判断文件类型是否合法
-        String contentType = file.getContentType();
         String originalFilename = file.getOriginalFilename();
+        // 校验文件的类型
+        String contentType = file.getContentType();
         if (!CONTENT_TYPES.contains(contentType)){
-            LOGGER.info("文件类型不合法:{}", originalFilename);
+            // 文件类型不合法，直接返回null
+            LOGGER.info("文件类型不合法：{}", originalFilename);
             return null;
         }
-        //2. 判断文件内容是否合法
+
         try {
-            BufferedImage image = ImageIO.read(file.getInputStream());
-            if (image==null){
-                LOGGER.info("文件内容不合法:{}", originalFilename);
+            // 校验文件的内容
+            BufferedImage bufferedImage = ImageIO.read(file.getInputStream());
+            if (bufferedImage == null){
+                LOGGER.info("文件内容不合法：{}", originalFilename);
                 return null;
             }
-            //保存到服务器
-            file.transferTo(new File("D:\\我的项目\\leyou\\image"+originalFilename));
-            //生成url返回
-            return "http://image.leyou.com/" + originalFilename;
+
+            // 保存到服务器
+            // file.transferTo(new File("C:\\leyou\\images\\" + originalFilename));
+            String ext = StringUtils.substringAfterLast(originalFilename, ".");
+            StorePath storePath = this.storageClient.uploadFile(file.getInputStream(), file.getSize(), ext, null);
+
+            // 生成url地址，返回
+            return "http://image.leyou.com/" + storePath.getFullPath();
         } catch (IOException e) {
+            LOGGER.info("服务器内部错误：{}", originalFilename);
             e.printStackTrace();
         }
         return null;

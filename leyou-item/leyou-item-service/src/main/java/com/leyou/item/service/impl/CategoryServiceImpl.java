@@ -26,4 +26,10 @@ public class CategoryServiceImpl implements CategoryService {
         List<Category> categories = categoryMapper.selectByIdList(ids);
         return categories.stream().map(category -> category.getName()).collect(Collectors.toList());
     }
+
+    @Override
+    public List<String> queryNamesByIds(List<Long> ids) {
+        List<Category> categories = categoryMapper.selectByIdList(ids);
+        return categories.stream().map(category -> category.getName()).collect(Collectors.toList());
+    }
 }

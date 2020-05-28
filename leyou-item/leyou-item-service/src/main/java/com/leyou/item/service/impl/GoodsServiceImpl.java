@@ -9,6 +9,8 @@ import com.leyou.item.pojo.*;
 import com.leyou.item.service.CategoryService;
 import com.leyou.item.service.GoodsService;
 import org.apache.commons.lang.StringUtils;
+import org.springframework.amqp.AmqpException;
+import org.springframework.amqp.core.AmqpTemplate;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -40,6 +42,8 @@ public class GoodsServiceImpl implements GoodsService {
 
     @Autowired
     private StockMapper stockMapper;
+    @Autowired
+    private AmqpTemplate amqpTemplate;
 
     @Override
     public PageResult<SpuBo> querySpuBoByPage(String key, Boolean saleable, Integer page, Integer rows) {
@@ -97,8 +101,16 @@ public class GoodsServiceImpl implements GoodsService {
 
         //保存sku
         saveSkuAndStock(spuBo);
-    }
 
+        sendMessage(spuBo.getId(),"insert");
+    }
+    private void sendMessage(Long id, String type) {
+        try {
+            amqpTemplate.convertAndSend("item." + type, id);
+        } catch (AmqpException e) {
+            e.printStackTrace();
+        }
+    }
     private void saveSkuAndStock(SpuBo spuBo) {
         spuBo.getSkus().forEach(sku -> {
             sku.setId(null);
@@ -163,5 +175,12 @@ public class GoodsServiceImpl implements GoodsService {
 
         // 更新spu详情
         this.spuDetailMapper.updateByPrimaryKeySelective(spu.getSpuDetail());
+
+        sendMessage(spu.getId(),"update");
+    }
+
+    @Override
+    public Spu querySpuById(Long id) {
+        return this.spuMapper.selectByPrimaryKey(id);
     }
 }

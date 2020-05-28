@@ -8,4 +8,5 @@ import java.util.List;
 public interface CategoryService {
     List<Category> queryCategoriesByPid(Long pid);
     List<String> selectNamesByIds(List<Long> ids);
+    List<String> queryNamesByIds(List<Long> ids);
 }
